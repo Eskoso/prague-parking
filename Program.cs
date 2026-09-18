@@ -158,6 +158,183 @@ static void ParkCar(string?[] parkingGarage)
     Console.ReadKey(true);
 }
 
+// Flytta fordon
+static void MoveCar(string?[] parkingGarage)
+{
+    AnsiConsole.Clear();
+
+    // titel
+    AnsiConsole.MarkupLine("[bold yellow]Flytta fordon[/]");
+    AnsiConsole.WriteLine();
+
+    // om det inte finns några parkerade fordon, visa felmeddelande och återgå till huvudmenyn
+    if (parkingGarage.All(spot => spot == null))
+    {
+        AnsiConsole.MarkupLine("[red]Det finns inga parkerade fordon att flytta.[/]");
+        AnsiConsole.WriteLine();
+        AnsiConsole.MarkupLine(
+            "[grey]Tryck på valfri tangent för att återgå till huvudmenyn...[/]"
+        );
+        Console.ReadKey(true);
+        return;
+    }
+
+    // lista alla parkerade fordon
+    List<string> vehicles = new List<string>();
+
+    // hämta alla parkerade fordon
+    for (int i = 0; i < parkingGarage.Length; i++)
+    {
+        // om platsen inte är tom, hämta fordonen på platsen
+        if (parkingGarage[i] != null)
+        {
+            // dela upp fordonen på platsen i en array
+            string[] vehiclesOnSpot = parkingGarage[i]!.Split('|');
+
+            // loop igenom fordonen och formatera dem snyggt
+            foreach (string veh in vehiclesOnSpot)
+            {
+                // dela upp fordonet i typ och registreringsnummer
+                string[] vehicleParts = veh.Split('#');
+
+                string vehicleType = vehicleParts[0];
+                string licensePlate = vehicleParts[1];
+
+                // lägg till fordonet i listan med snyggt format "TYPE - REGNR"
+                vehicles.Add($"Plats {i + 1} - {vehicleType} - {licensePlate}");
+            }
+        }
+    }
+
+    // lägg till "tillbaka" som ett alternativ
+    vehicles.Add("Tillbaka");
+
+    // Låt användaren välja fordon
+    string choice = AnsiConsole.Prompt(
+        new SelectionPrompt<string>()
+            .Title("Välj fordon att flytta:")
+            .PageSize(15)
+            .AddChoices(vehicles)
+    );
+
+    // återgå till huvudmeny
+    if (choice == "Tillbaka")
+    {
+        return;
+    }
+
+    // hämta index för den valda platsen och fordonet
+    string[] parts = choice.Split(" - ");
+
+    // hämta platsnummer från valet
+    int currentSpot = int.Parse(
+        parts[0].Replace("Plats ", "")
+    );
+
+    // index i arrayen är plats - 1
+    int currentIndex = currentSpot - 1;
+
+    // sätt tillbaka formatet TYPE#REGNR
+    string vehicle = $"{parts[1]}#{parts[2]}";
+
+
+    // Skapa lista med platser som fordonet kan flyttas till
+    List<string> availableSpots = new List<string>();
+
+    // loop igenom alla parkeringsplatser och kolla vilka som är lediga eller har plats för fordonet
+    for (int i = 0; i < parkingGarage.Length; i++)
+    {
+        string? spot = parkingGarage[i];
+
+        // hoppa över platsen fordonet redan står på
+        if (i == currentIndex)
+        {
+            continue;
+        }
+
+        // alla fordon kan flyttas till en tom plats
+        if (spot == null)
+        {
+            availableSpots.Add($"Plats {i + 1} - LEDIG");
+        }
+
+        // MC kan också flyttas till en plats där det står exakt en MC
+        else if (
+            vehicle.StartsWith("MC#") &&
+            spot.StartsWith("MC#") &&
+            !spot.Contains("|")
+        )
+        {
+            availableSpots.Add(
+                $"Plats {i + 1} - {spot} (1 MC-plats kvar)"
+            );
+        }
+    }
+
+    // välj ny plats
+    string newSpotChoice = AnsiConsole.Prompt(
+        new SelectionPrompt<string>()
+            .Title($"Välj plats att flytta [yellow]{vehicle}[/] till:")
+            .PageSize(15)
+            .AddChoices(availableSpots)
+    );
+
+
+    // hämta index för den nya platsen
+    string[] newParts = newSpotChoice.Split(" - ");
+
+    // hämta platsnummer från valet
+    int newSpot = int.Parse(
+        newParts[0].Replace("Plats ", "")
+    );
+
+    // index i arrayen är plats - 1
+    int newIndex = newSpot - 1;
+
+
+    // ta bort fordonet från gamla platsen
+    string[] vehiclesOnCurrentSpot = parkingGarage[currentIndex]!.Split('|');
+
+    if (vehiclesOnCurrentSpot.Length == 1)
+    {
+        // fordonet står ensamt, töm hela platsen
+        parkingGarage[currentIndex] = null;
+    }
+    else
+    {
+        // två MC står på platsen behåll den MC som inte flyttas
+        parkingGarage[currentIndex] = vehiclesOnCurrentSpot
+            .First(veh => veh != vehicle);
+    }
+
+
+    // lägg fordonet på nya platsen
+    if (parkingGarage[newIndex] == null)
+    {
+        // nya platsen är tom
+        parkingGarage[newIndex] = vehicle;
+    }
+    else
+    {
+        // det står redan en MC där
+        parkingGarage[newIndex] += $"|{vehicle}";
+    }
+
+
+    // visa meddelande
+    AnsiConsole.WriteLine();
+    AnsiConsole.MarkupLine(
+        $"[green]{vehicle} har flyttats från plats {currentSpot} till plats {newSpot}.[/]"
+    );
+
+    AnsiConsole.WriteLine();
+    AnsiConsole.MarkupLine(
+        "[grey]Tryck på valfri tangent för att återgå till huvudmenyn...[/]"
+    );
+
+    Console.ReadKey(true);
+}
+
 
 
 
@@ -192,7 +369,7 @@ while (true)
             break;
 
         case "2. Flytta fordon":
-            //MoveCar(parkingGarage);
+            MoveCar(parkingGarage);
             break;
 
         case "3. Hämta ut fordon":
