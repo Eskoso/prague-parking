@@ -427,6 +427,85 @@ static void RemoveCar(string?[] parkingGarage)
     Console.ReadKey(true);
 }
 
+// sök efter fordon
+static void SearchCars(string?[] parkingGarage)
+{
+    AnsiConsole.Clear();
+    // titel
+    AnsiConsole.MarkupLine("[bold yellow]Sök efter fordon[/]");
+    AnsiConsole.WriteLine();
+
+    // Prompt användaren att ange registreringsnummer att söka efter
+    string searchTerm = AnsiConsole.Prompt(
+        new TextPrompt<string>("Ange registreringsnummer att söka efter:")
+            .AllowEmpty()
+    ).ToUpper();
+
+    // Om användaren inte anger något, visa felmeddelande och återgå till huvudmenyn
+    if (string.IsNullOrWhiteSpace(searchTerm))
+    {
+        AnsiConsole.MarkupLine("[red]Registreringsnummer får inte vara tomt.[/]");
+        AnsiConsole.WriteLine();
+        AnsiConsole.MarkupLine(
+            "[grey]Tryck på valfri tangent för att återgå till huvudmenyn...[/]"
+        );
+        Console.ReadKey(true);
+        return;
+    }
+
+    // Sök igenom alla parkeringsplatser och hitta fordon som matchar regnummret
+    List<string> foundVehicles = new List<string>();
+
+    // Loop igenom alla parkeringsplatser
+    for (int i = 0; i < parkingGarage.Length; i++)
+    {
+        // Om platsen inte är tom, kolla fordonen på platsen
+        if (parkingGarage[i] != null)
+        {
+            // Dela upp fordonen på platsen i en array
+            string[] vehiclesOnSpot = parkingGarage[i]!.Split('|');
+
+            // kolla om regnumret matchar söktermen
+            foreach (string veh in vehiclesOnSpot)
+            {
+                // Dela upp fordonet i typ och registreringsnummer
+                string[] vehicleParts = veh.Split('#');
+
+                string vehicleType = vehicleParts[0];
+                string licensePlate = vehicleParts[1];
+
+                // Om registreringsnumret matchar söktermen
+                if (licensePlate.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
+                {
+                    foundVehicles.Add($"Plats {i + 1} - {vehicleType} - {licensePlate}");
+                }
+            }
+        }
+    }
+
+    // Visa resultatet av sökningen
+    AnsiConsole.WriteLine();
+    if (foundVehicles.Count > 0)
+    {
+        AnsiConsole.MarkupLine("[green]Fordon hittades:[/]");
+        foreach (string vehicle in foundVehicles)
+        {
+            AnsiConsole.MarkupLine(vehicle);
+        }
+    }
+    else
+    {
+        // Om inga fordon hittades, visa ett meddelande
+        AnsiConsole.MarkupLine("[red]Inga fordon hittades med det angivna registreringsnumret.[/]");
+    }
+
+    AnsiConsole.WriteLine();
+    AnsiConsole.MarkupLine(
+        "[grey]Tryck på valfri tangent för att återgå till huvudmenyn...[/]"
+    );
+    Console.ReadKey(true);
+}
+
 
 // Huvudmeny
 while (true)
@@ -467,7 +546,7 @@ while (true)
             break;
 
         case "4. Sök efter fordon":
-            //SearchCars(parkingGarage);
+            SearchCars(parkingGarage);
             break;
 
         case "5. Visa parkering":
