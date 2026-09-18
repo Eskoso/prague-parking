@@ -335,7 +335,97 @@ static void MoveCar(string?[] parkingGarage)
     Console.ReadKey(true);
 }
 
+// hämta ut fordon
+static void RemoveCar(string?[] parkingGarage)
+{
+    AnsiConsole.Clear();
 
+    // titel
+    AnsiConsole.MarkupLine("[bold yellow]Hämta ut fordon[/]");
+    AnsiConsole.WriteLine();
+
+    List<string> vehicles = new List<string>();
+
+    // Hämta alla parkerade fordon
+    for (int i = 0; i < parkingGarage.Length; i++)
+    {
+        if (parkingGarage[i] != null)
+        {
+            // Dela upp fordonen på platsen i en array
+            string[] vehiclesOnSpot = parkingGarage[i]!.Split('|');
+
+            // Loop igenom fordonen och formatera dem snyggt
+            foreach (string veh in vehiclesOnSpot)
+            {
+                string[] vehicleParts = veh.Split('#');
+
+                string vehicleType = vehicleParts[0];
+                string licensePlate = vehicleParts[1];
+
+                // Lägg till fordonet i listan med snyggt format
+                vehicles.Add($"Plats {i + 1} - {vehicleType} - {licensePlate}");
+            }
+        }
+    }
+
+    vehicles.Add("Tillbaka");
+
+    // låt användaren välja fordon
+    string choice = AnsiConsole.Prompt(
+        new SelectionPrompt<string>()
+            .Title("Välj fordon att hämta:")
+            .PageSize(15)
+            .AddChoices(vehicles)
+    );
+
+    // återgå till huvudmenyn
+    if (choice == "Tillbaka")
+    {
+        return;
+    }
+
+    // hämta plats och fordon
+    string[] parts = choice.Split(" - ");
+
+    int currentSpot = int.Parse(
+        parts[0].Replace("Plats ", "")
+    );
+
+    int currentIndex = currentSpot - 1;
+
+    // sätt tillbaka formatet TYPE#REGNR
+    string vehicle = $"{parts[1]}#{parts[2]}";
+
+    // hämta alla fordon på platsen
+    string[] vehiclesOnCurrentSpot = parkingGarage[currentIndex]!.Split('|');
+
+    if (vehiclesOnCurrentSpot.Length == 1)
+    {
+        // fordonet står ensamt
+        parkingGarage[currentIndex] = null;
+    }
+    else
+    {
+        // två MC står på platsen
+        // behåll den MC som inte hämtas
+        parkingGarage[currentIndex] = vehiclesOnCurrentSpot
+            .First(veh => veh != vehicle);
+    }
+
+    AnsiConsole.WriteLine();
+
+    // visa snyggt istället för MC#ABC123
+    AnsiConsole.MarkupLine(
+        $"[green]{parts[1]} - {parts[2]} har hämtats från plats {currentSpot}.[/]"
+    );
+
+    AnsiConsole.WriteLine();
+    AnsiConsole.MarkupLine(
+        "[grey]Tryck på valfri tangent för att återgå till huvudmenyn...[/]"
+    );
+
+    Console.ReadKey(true);
+}
 
 
 // Huvudmeny
@@ -373,7 +463,7 @@ while (true)
             break;
 
         case "3. Hämta ut fordon":
-            //RemoveCar(parkingGarage);
+            RemoveCar(parkingGarage);
             break;
 
         case "4. Sök efter fordon":
