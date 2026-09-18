@@ -506,6 +506,63 @@ static void SearchCars(string?[] parkingGarage)
     Console.ReadKey(true);
 }
 
+// Visa parkeringar
+static void ShowParkingStatus(string?[] parkingGarage)
+{
+    AnsiConsole.Clear();
+
+    // titel
+    AnsiConsole.MarkupLine("[bold yellow]Parkeringsstatus[/]");
+    AnsiConsole.WriteLine();
+
+    // Loopa igenom alla parkeringsplatser och visa status
+    for (int i = 0; i < parkingGarage.Length; i++)
+    {
+
+        // Om platsen är tom, visa "LEDIG" i grönt
+        if (parkingGarage[i] == null)
+        {
+            AnsiConsole.MarkupLine(
+                $"Plats {i + 1}: [green]LEDIG[/]"
+            );
+        }
+        else
+        {
+            // Om platsen är upptagen, visa fordonen i rött
+            // Om det är en MC-plats med två MC, visa båda
+            string[] vehicles = parkingGarage[i]!.Split('|');
+
+            // Skapa en lista med fordonen i formatet "TYPE - REGNR"
+            List<string> displayVehicles = new List<string>();
+
+            // Loop igenom fordonen och formatera dem
+            foreach (string vehicle in vehicles)
+            {
+                // Dela upp fordonet i typ och registreringsnummer vehicletype och licenseplate för att senare formatera snyggare "plats 1: type - regnr"
+                string[] vehicleParts = vehicle.Split('#');
+
+                string vehicleType = vehicleParts[0];
+                string licensePlate = vehicleParts[1];
+
+                // lägg till fordonet i listan med snyggt format
+                displayVehicles.Add($"{vehicleType} - {licensePlate}");
+            }
+
+            // Visa fordonen i rött
+            AnsiConsole.MarkupLine(
+                $"Plats {i + 1}: [red]{string.Join(" | ", displayVehicles)}[/]"
+            );
+        }
+    }
+
+    // standard meddelande för att återgå till huvudmenyn
+    AnsiConsole.WriteLine();
+    AnsiConsole.MarkupLine(
+        "[grey]Tryck på valfri tangent för att återgå till huvudmenyn...[/]"
+    );
+
+    Console.ReadKey(true);
+}
 
 // Huvudmeny
 while (true)
@@ -550,7 +607,7 @@ while (true)
             break;
 
         case "5. Visa parkering":
-            //ShowParkingStatus(parkingGarage);
+            ShowParkingStatus(parkingGarage);
             break;
 
         case "0. Avsluta":
