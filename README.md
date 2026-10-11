@@ -1,50 +1,175 @@
-# Prague Parking
 
-Två fristående svenska konsolapplikationer av Walter Esko, framtagna inom kursen Objektorienterad programmering C# på KYH Systemutveckling DevSecOps.
+# Prague Parking V1 & V1.1
 
-## Projekten
+Ett parkeringssystem utvecklat i **C# och .NET 10** av **Walter Esko** som en del av kursen Objektorienterad programmering på KYH, utbildningen Systemutvecklare DevSecOps.
 
-Båda versionerna har ett garage med 100 parkeringsplatser och ett menygränssnitt med Spectre.Console. En bil tar en plats och två motorcyklar kan dela en plats. Användaren kan parkera, flytta och hämta ut fordon, söka på hela eller delar av registreringsnumret och visa parkeringsstatus. Parkeringsinformationen finns i minnet under körningen och sparas inte mellan starter.
+Systemet är utvecklat med fokus på enkel användning, tydlig struktur och effektiv hantering av parkeringsplatser med hjälp av spectre.console.
 
-- **PragueParkingV1.0** startar med förifyllda exempel: två motorcyklar på plats 10 och bilar på platserna 16, 25 och 33. Registreringsnummer valideras vid parkering. Sökningen visar träffar eller ett meddelande och återgår sedan till huvudmenyn efter ett tangenttryck.
-- **PragueParkingV1.1** startar med ett tomt garage. Vid inmatning av registreringsnummer för parkering och sökning kan användaren försöka igen efter ogiltig inmatning och skriva `0` för att återgå. Sökningen kontrollerar även längd och teckentyp och låter användaren söka igen om inga fordon hittas. Vid flytt kontrolleras att det finns en tillgänglig destinationsplats.
+### Funktioner
 
-## Krav
+Applikationen innehåller följande funktioner:
 
-.NET 10 SDK och en interaktiv terminal. Båda projekten använder NuGet-paketet Spectre.Console **0.57.2**. För Visual Studio behövs en installation som stöder .NET 10 och lösningsformatet `.slnx`.
+- **Parkera fordon:** Registrera en bil eller motorcykel och tilldela automatiskt en lämplig parkeringsplats.
+- **Flytta fordon:** Flytta ett parkerat fordon till en annan tillgänglig plats.
+- **Hämta ut fordon:** Ta bort ett fordon från parkeringen och frigöra parkeringsplatsen.
+- **Sök efter fordon:** Hitta parkerade fordon genom hela eller delar av registreringsnumret.
+- **Visa parkeringsstatus:** Visa samtliga parkeringsplatser med information om vilka fordon som finns parkerade.
+- **Inputvalidering:** Kontrollera registreringsnummer och hantera felaktig användarinmatning.
 
-## Bygg och kör
+### Parkeringsregler
 
-Kör följande från katalogen `prague-parking`:
+Parkeringsanläggningen har totalt **100 parkeringsplatser**.
 
-```powershell
-dotnet restore .\prague-parking.slnx
-dotnet build .\prague-parking.slnx
-```
+Varje parkeringsplats kan innehålla:
 
-Starta en version i taget:
+- En bil
+- En motorcykel
+- Två motorcyklar
+- Inget fordon
 
-```powershell
-dotnet run --project .\PragueParkingV1.0\PragueParkingV1.0.csproj
-dotnet run --project .\PragueParkingV1.1\PragueParkingV1.1.csproj
-```
+När en motorcykel ska parkeras söker programmet först efter en plats där det redan står en ensam motorcykel för att utnyttja parkeringsytan effektivt.
 
-I Visual Studio: öppna `prague-parking.slnx`, välj önskat projekt som startprojekt och kör. Navigera i menyerna med piltangenterna och bekräfta med Enter. Välj `0. Avsluta` i huvudmenyn för att avsluta.
+Fordon identifieras genom registreringsnummer med maximalt **10 tecken**.
 
-## Struktur
+---
+
+## Projektversioner
+
+### Prague Parking V1.0
+
+Grundversionen innehåller de huvudsakliga funktionerna för att parkera, flytta, söka efter och hämta ut fordon.
+
+### Prague Parking V1.1
+
+Den vidareutvecklade versionen fokuserar på användarvänlighet och förbättrad felhantering.
+
+**Förbättringar:**
+
+- Förbättrad validering av registreringsnummer.
+- Stöd för bokstäver som Å, Ä, Ö och Ü.
+- Möjlighet att försöka igen vid felaktig inmatning.
+- Skydd mot dubbla registreringsnummer.
+- Förbättrad hantering när parkeringen är full.
+
+---
+
+## Tekniker
+
+| Teknik | Användningsområde |
+|---|---|
+| C# | Programmeringsspråk |
+| .NET 10 | Applikationsplattform |
+| Spectre.Console | Textbaserat användargränssnitt |
+| Visual Studio | Utvecklingsmiljö |
+| Git & GitHub | Versionshantering och inlämning |
+
+---
+
+## Installation och körning
+
+### Starta via Visual Studio
+
+1. Klona eller ladda ner projektet från GitHub.
+2. Öppna filen `prague-parking.slnx` i Visual Studio.
+3. Vänta tills Visual Studio har återställt nödvändiga NuGet-paket.
+4. Högerklicka på önskat projekt i Solution Explorer.
+5. Välj **Set as Startup Project**.
+6. Starta applikationen med `F5` eller `Ctrl + F5`.
+
+## Användning
+
+När programmet startas visas en interaktiv huvudmeny:
 
 ```text
-prague-parking/
-├── PragueParkingV1.0/
-│   ├── Program.cs
-│   └── PragueParkingV1.0.csproj
-├── PragueParkingV1.1/
-│   ├── Program.cs
-│   └── PragueParkingV1.1.csproj
-├── prague-parking.slnx
-├── README.md
-├── .gitignore
-└── .gitattributes
+Välkommen till Prague Parking!
+
+Vad vill du göra?
+
+> 1. Parkera fordon
+  2. Flytta fordon
+  3. Hämta ut fordon
+  4. Sök efter fordon
+  5. Visa parkering
+  0. Avsluta
 ```
 
-Källkoden är bevarad utan ändringar vid omstruktureringen. Projekten är separata körbara program. Den befintliga Git-historiken från V1.0 är bevarad i repositoryts rot. Befintliga byggfiler under `bin` och `obj` har också bevarats och ignoreras av Git.
+Navigera med **piltangenterna** och bekräfta ditt val med **Enter**.
+
+### Exempel på fordonsregistrering
+
+En bil med registreringsnummer `ABC123` lagras som:
+
+```text
+CAR#ABC123
+```
+
+Två motorcyklar på samma parkeringsplats lagras som:
+
+```text
+MC#ABC123|MC#DEF456
+```
+
+Systemet använder en array med 100 element för att representera parkeringsplatserna.
+
+---
+
+## Testning
+
+Applikationen har genomgått manuell testning för att kontrollera funktionalitet, felhantering och användarvänlighet.
+
+Testningen omfattade:
+
+- Registrering av bilar och motorcyklar.
+- Dubbelparkering av motorcyklar.
+- Flyttning och uthämtning av fordon.
+- Sökning efter registreringsnummer.
+- Felaktig användarinmatning.
+- Kontroll av dubbla registreringsnummer.
+- Full parkering med 100 bilar.
+- Full parkering med 200 motorcyklar.
+- Kontroll av parkeringsstatus och platsnumrering.
+- Hantering av full parkering vid flyttning.
+
+### Testresultat
+
+| Testresultat | Antal |
+|---|---:|
+| Genomförda tester | 31 |
+| Godkända tester efter korrigering | 31 |
+| Kvarstående fel i testprotokollet | 0 |
+
+Under testningen upptäcktes ett problem i flyttfunktionen där programmet kunde krascha om inga tillgängliga parkeringsplatser fanns.
+
+Problemet åtgärdades genom att kontrollera antalet tillgängliga platser innan valmenyn visades.
+
+Efter korrigeringen genomfördes berörda tester igen och godkändes.
+
+---
+
+## Begränsningar
+
+- Maximalt 100 parkeringsplatser.
+- Maximalt två motorcyklar per plats.
+- Ingen permanent lagring av parkeringsinformation.
+- Ingen hantering av betalningar eller parkeringsavgifter.
+- Ingen automatisk tidsregistrering av parkerade fordon.
+
+---
+
+## Om projektet
+
+Projektet är utvecklat som en individuell inlämningsuppgift inom utbildningen Systemutvecklare DevSecOps på KYH.
+
+| Information | Beskrivning |
+|---|---|
+| Utvecklare | Walter Esko |
+| Utbildning | Systemutvecklare DevSecOps |
+| Skola | KYH |
+| Kurs | Objektorienterad programmering |
+| Programmeringsspråk | C# |
+| Plattform | .NET 10 |
+
+---
+
+*Prague Parking är ett utbildningsprojekt utvecklat för att öva på programmeringslogik, arrayer, metoder, felhantering och användarinteraktion i C#.*
+
