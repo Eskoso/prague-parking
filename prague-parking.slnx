@@ -1,4 +1,6 @@
 <Solution>
-  <Project Path="PragueParkingV1.1/PragueParkingV1.1.csproj" Id="79224f70-0562-44ac-8003-a18f35d1adda" />
+  <Project Path="PragueParking.DataAccess/PragueParking.DataAccess.csproj" Id="9016b11d-916f-401f-b098-344935643a64" />
   <Project Path="PragueParkingV1.0/PragueParkingV1.0.csproj" />
+  <Project Path="PragueParkingV1.1/PragueParkingV1.1.csproj" Id="79224f70-0562-44ac-8003-a18f35d1adda" />
+  <Project Path="PragueParkingV2/PragueParkingV2.csproj" Id="afd2e0a3-bf9b-47df-9b8a-f5850ec35523" />
 </Solution>
