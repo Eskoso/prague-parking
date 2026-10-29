@@ -6,15 +6,40 @@
         // Lista av parkeringsplatser i garaget
         public List<ParkingSpot> Spots { get; } = new();
 
-        // Skapar nytt parkeringsgarage med angivet antal platser och kapacitet per plats
-        public ParkingGarage(int numberOfSpots, int spotCapacity)
+        // Platsnummer i spotCapacities ersätter standardkapaciteten för just den platsen.
+        public ParkingGarage(int numberOfSpots, int spotCapacity, Dictionary<int, int> spotCapacities)
         {
             ArgumentOutOfRangeException.ThrowIfNegativeOrZero(numberOfSpots);
             ArgumentOutOfRangeException.ThrowIfNegativeOrZero(spotCapacity);
+            ArgumentNullException.ThrowIfNull(spotCapacities);
+
+            foreach (int spotNumber in spotCapacities.Keys)
+            {
+                int capacity = spotCapacities[spotNumber];
+
+                if (spotNumber < 1 || spotNumber > numberOfSpots)
+                {
+                    throw new ArgumentException(
+                        "Platsnumret finns inte i garaget.");
+                }
+
+                if (capacity <= 0)
+                {
+                    throw new ArgumentException(
+                        "Platsens kapacitet måste vara större än noll.");
+                }
+            }
 
             for (int number = 1; number <= numberOfSpots; number++)
             {
-                Spots.Add(new ParkingSpot(number, spotCapacity));
+                int capacity = spotCapacity;
+
+                if (spotCapacities.ContainsKey(number))
+                {
+                    capacity = spotCapacities[number];
+                }
+
+                Spots.Add(new ParkingSpot(number, capacity));
             }
         }
 

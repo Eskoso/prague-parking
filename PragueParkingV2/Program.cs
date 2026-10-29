@@ -334,7 +334,7 @@ static void DisplayParking(ParkingGarage garage)
         if (spot.Vehicles.Count == 0)
         {
             AnsiConsole.MarkupLine(
-                $"Plats {spot.Number}: [green]LEDIG[/]");
+                $"Plats {spot.Number}: [green]LEDIG[/] (0/{spot.Capacity})");
             continue;
         }
 
@@ -444,8 +444,9 @@ static ParkingGarage CreateGarage(
 
     // skapa parkeringsgaraget med antal platser och kapacitet utifrån konfigurationen
     var garage = new ParkingGarage(
-    config.NumberOfSpots,
-    config.SpotCapacity);
+        config.NumberOfSpots,
+        config.SpotCapacity,
+        config.SpotCapacities);
     var plates = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
     var now = DateTimeOffset.Now;
 
@@ -671,11 +672,11 @@ static void ShowParkingMap(ParkingGarage garage)
         }
 
         AnsiConsole.Markup(
-            $"[{color}] {spot.Number:000} {status} [/] ");
+            $"[{color}] {spot.Number:000} {status} [/]");
 
         column++;
 
-        if (column == 4)
+        if (column == 3 || column == 5)
         {
             Console.Write("   ");
         }

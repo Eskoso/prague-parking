@@ -1,4 +1,4 @@
-# Loggbok – Prague Parking V1.0 och V1.1
+# Loggbok – Prague Parking V1.0, V1.1 och V2
 
 **Namn:** Walter Esko  
 **Utbildning:** Systemutvecklare DevSecOps, KYH  
@@ -17,7 +17,7 @@ Jag skapade projektet i Visual Studio och använde en array med 100 element för
 
 Jag valde att använda Spectre.Console för att skapa en tydligare och mer användarvänlig huvudmeny där användaren kan navigera med piltangenterna.
 
-Därefter utvecklade jag funktionen för att parkera fordon. Programmet söker automatiskt efter en ledig parkeringsplats och försöker placera två motorcyklar tillsammans för att spara utrymme.
+Därefter utveckla jag funktionen för att parkera fordon. Programmet söker automatiskt efter en ledig parkeringsplats och försöker placera två motorcyklar tillsammans för att spara utrymme.
 
 Jag började också dela upp programmet i separata metoder för att göra koden mer strukturerad och lättare att arbeta med.
 
@@ -29,7 +29,7 @@ Jag fortsatte utvecklingen genom att skapa funktionerna för att flytta, hämta 
 
 En av utmaningarna var att hantera två motorcyklar på samma parkeringsplats. Om en motorcykel flyttades eller hämtades ut behövde den andra finnas kvar. Jag löste detta genom att använda Split() för att dela upp fordonsinformationen och sedan uppdatera arrayen.
 
-Jag skapade även en sökfunktion där användaren kan söka efter hela eller delar av ett registreringsnummer. Därefter utvecklade jag en parkeringsöversikt som visar alla 100 platser. Med hjälp av Spectre.Console visas lediga platser grönt och upptagna platser rött.
+Jag skapade även en sökfunktion där användaren kan söka efter hela eller delar av ett registreringsnummer. Därefter utveckla jag en parkeringsöversikt som visar alla 100 platser. Med hjälp av Spectre.Console visas lediga platser grönt och upptagna platser rött.
 
 När grundfunktionerna fungerade gick jag vidare med V1.1.
 
@@ -74,3 +74,64 @@ Jag har också fått mer erfarenhet av att strukturera ett större program och h
 En viktig lärdom var hur betydelsefull testning är. Programmet fungerade under normal användning, men genom att testa gränsfall upptäckte jag en bugg som annars hade kunnat finnas kvar vid inlämningen.
 
 Efter felsökning och förbättringar fungerar samtliga testade funktioner och projektet är förberett för inlämning.
+
+## Prague Parking V2.0
+
+### Arbetstillfälle 1 – Objektorienterad struktur
+
+**Datum:** 2026-10-23
+
+Jag utgick från V1.1-koden som kopierats till projektet PragueParkingV2.
+Jag skapade klasserna Vehicle, Car, MC, ParkingSpot och ParkingGarage.
+
+Car och MC fick ärva gemensamma egenskaper från Vehicle. Jag anpassade
+parkering, flytt, uthämtning och sökning till objekt istället för
+strängar i en array.
+
+Under arbetet testade jag bland annat att två MC kan dela plats och
+att den ena finns kvar när den andra flyttas eller hämtas ut.
+
+### Arbetstillfälle 2 – Filhantering, konfiguration och avgifter
+
+**Datum:** 2026-10-26
+
+Jag la till klassbiblioteket PragueParking.DataAccess för filhantering.
+Parkeringsdata sparas nu i JSON efter parkering, flytt och uthämtning
+och läses in när programmet startar.
+
+Jag la till config.json för antal platser, platskapacitet,
+fordonsstorlekar och timpriser. Jag valde att samla priser och
+inställningar i samma fil (Config.json).
+
+Jag la också till beräkning av parkeringstid och avgift vid uthämtning,
+samt ett menyval för att läsa in priserna igen utan omstart.
+
+Ett problem var att projektets config.json och kopian i körmappen är
+olika filer. Jag kontrollerade vilken fil programmet faktiskt läser.
+
+Jag testade att fordon, placeringar och ankomsttider finns kvar efter
+omstart. Jag kontrollerade även att ogiltiga inställningar och priser 
+avvisas och att tidigare priser behålls vid misslyckad prisomladdning.
+
+### Arbetstillfälle 3 – Parkeringskarta, platsstorlekar och sluttestning
+
+**Datum:** 2026-10-29
+
+Jag la till en parkeringskarta som visar lediga, delvis upptagna och
+fulla platser med både färger och bokstäver. Med 100 platser visas kartan 
+med 8 platser per rad, uppdelade i grupper om 3, 2 och 3 platser med körgångar 
+mellan grupperna. Det blir 12 fulla rader och en sista rad med 4 platser.
+
+Jag gick igenom stödet för olika platsstorlekar och förenkla
+kontrollerna till tydligare if-satser och loopar. Plats 100 fick
+kapacitet 8, medan standardkapaciteten är 4.
+
+Jag testade att två bilar ryms på plats 100. När platsen är full
+försvinner den som alternativ i flyttmenyn. Jag kontrollerade också
+att kartan visar rätt efter förändringar.
+
+Jag genomförde manuella sluttester av grundfunktionerna. En separat
+ren körkopia kontrollerades också för att verifiera bygge, startdata
+och att befintliga parkeringsdata inte skrivs över.
+
+Jag arbetade därefter med dokumentationen för V2.0 inför inlämningen.

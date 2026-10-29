@@ -15,4 +15,10 @@
 	  </None>
   </ItemGroup>
 
+  <Target Name="CopyInitialParkingData" AfterTargets="Build">
+    <Copy SourceFiles="$(MSBuildProjectDirectory)/parking.json"
+          DestinationFiles="$(TargetDir)parking.json"
+          Condition="!Exists('$(TargetDir)parking.json')" />
+  </Target>
+
 </Project>

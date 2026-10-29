@@ -1,6 +1,9 @@
 ﻿{
     "NumberOfSpots": 100,
     "SpotCapacity": 4,
+    "SpotCapacities": {
+        "100": 8
+    },
     "VehicleTypes": [
         {
             "Type": "CAR",

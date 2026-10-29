@@ -171,5 +171,14 @@ Projektet är utvecklat som en individuell inlämningsuppgift inom utbildningen 
 
 ---
 
+## Prague Parking V2.0
+
+Den objektorienterade versionen med JSON-lagring,
+konfiguration, avgifter och parkeringskarta.
+
+[Läs dokumentationen för V2.0](PragueParkingV2/README.md)
+
+---
+
 *Prague Parking är ett utbildningsprojekt utvecklat för att öva på programmeringslogik, arrayer, metoder, felhantering och användarinteraktion i C#.*
 
