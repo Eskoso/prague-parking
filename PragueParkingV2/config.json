@@ -4,11 +4,13 @@
     "VehicleTypes": [
         {
             "Type": "CAR",
-            "Size": 4
+            "Size": 4,
+            "HourlyRate": 20
         },
         {
             "Type": "MC",
-            "Size": 2
+            "Size": 2,
+            "HourlyRate": 10
         }
     ]
 }

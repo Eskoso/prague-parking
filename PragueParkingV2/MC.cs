@@ -1,5 +1,6 @@
 ﻿namespace PragueParkingV2
 {
+    // MC klass som representerar en motorcykel med registreringsnummer, ankomsttid och storlek
     public class MC : Vehicle
     {
         public override int Size { get; }

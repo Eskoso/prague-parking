@@ -1,5 +1,6 @@
 ﻿namespace PragueParkingV2
 {
+    // ParkingSpot klass som representerar en parkeringsplats med nummer, kapacitet och en lista av fordon
     public class ParkingSpot
     {
         public int Number { get; }

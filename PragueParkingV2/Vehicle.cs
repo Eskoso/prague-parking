@@ -1,5 +1,6 @@
 ﻿namespace PragueParkingV2
 {
+    // Vehicle klass som representerar ett fordon med registreringsnummer, ankomsttid och storlek
     public abstract class Vehicle
     {
         public string LicensePlate { get; }

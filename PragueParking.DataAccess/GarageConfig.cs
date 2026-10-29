@@ -1,5 +1,6 @@
 ﻿namespace PragueParking.DataAccess
 {
+    // GarageConfig klass som representerar konfigurationen för garaget med antal platser, platskapacitet och en lista av fordonstyper
     public class GarageConfig
     {
         public int NumberOfSpots { get; set; } = 100;

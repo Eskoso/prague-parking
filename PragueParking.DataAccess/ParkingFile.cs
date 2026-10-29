@@ -2,12 +2,14 @@
 
 namespace PragueParking.DataAccess
 {
+    // ParkingFile klass som hanterar inläsning och sparande av parkeringsdata
     public class ParkingFile
     {
         public List<VehicleData> Load(string filePath)
         {
             string json;
 
+            // Försök att läsa in datafilen, om filen inte finns returnera en tom lista
             try
             {
                 json = File.ReadAllText(filePath);
@@ -22,6 +24,7 @@ namespace PragueParking.DataAccess
                     "Datafilen måste innehålla en lista med fordon.");
         }
 
+        // Save metod som sparar parkeringsdata till en fil
         public void Save(string filePath, List<VehicleData> vehicles)
         {
             string json = JsonSerializer.Serialize(
