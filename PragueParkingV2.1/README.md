@@ -35,10 +35,8 @@ Menyerna styrs med piltangenterna och Enter.
 Data sparas efter varje lyckad parkering, flytt och uthämtning.
 Om sparningen misslyckas återställs ändringen i minnet.
 
-Cyklar identifieras med ett unikt cykel-ID, exempelvis CYKEL001,
-som personalen anger vid parkering. Registreringsnummer och cykel-ID
-får innehålla 1–10 bokstäver eller siffror. Dubbletter avvisas
-utan hänsyn till stora eller små bokstäver.
+Cyklar identifieras med ett unikt cykel-ID, exempelvis "CYKEL001",
+som personalen anger vid parkering. Registreringsnummer och cykel-ID.
 
 ## Projektstruktur
 
@@ -59,7 +57,7 @@ i klassbiblioteket. V2.0 använder sina ursprungliga filklasser.
 
 ## Konfiguration
 
-Inställningar och timpriser finns i `PragueParkingV2.1/config.json`.
+Inställningar och priser finns i `PragueParkingV2.1/config.json`.
 
 Standardinställningarna är:
 
@@ -87,17 +85,13 @@ Enskilda platser kan ha en annan kapacitet genom SpotCapacities:
 Det betyder att plats 100 har kapacitet 8. Övriga platser använder
 standardkapaciteten. Plats 100 rymmer exempelvis två bilar eller fyra MC.
 
-En buss reserverar fyra hela platser i nummerföljd. Samtliga måste
-ligga inom plats 1–50, där takhöjden är tillräcklig. Platsernas
-sammanlagda kapacitet måste räcka och inga andra fordon får stå där.
-Vid flytt får målplatserna överlappa bussens egna platser.
+En buss reserverar fyra hela platser i nummerföljd, eg. 15-18. Alla måste
+ligga inom plats 1–50, där takhöjden är tillräcklig. Platsernas kapacitet 
+måste räcka och inga andra fordon får stå där. Vid flytt får målplatserna 
+överlappa bussens egna platser.
 
-Fyra platser i nummerföljd är projektets valda lösning för bussar.
-Kartan är schematisk, så dess radgränser och ritade körgångar
-begränsar inte bussplaceringen.
-
-Konfigurationen kontrolleras vid inläsning. Ogiltiga värden,
-dubbla fordonstyper och parkeringsdata som inte ryms avvisas.
+Konfigurationen kontrolleras vid start. Ogiltiga värden,
+dubbla fordonstyper och parkeringsdata som inte ryms tas bort.
 CAR och MC måste finnas i konfigurationen. BICYCLE och BUS kan läggas till.
 
 ## Filer under körning
@@ -125,7 +119,7 @@ en kapacitet så att parkerade fordon inte längre ryms.
 Om ändringen avvisas behålls tidigare inställningar och garage i minnet.
 
 En avvisad ändring finns fortfarande kvar i den redigerade JSON-filen.
-Filen behöver rättas innan nästa programstart.
+Filen behöver alltså rättas till innan nästa start.
 
 Ändra även projektets konfigurationsfil om inställningarna ska
 följa med framtida byggen.
@@ -143,9 +137,6 @@ skapandet, så att även avgifter kan kontrolleras.
 En befintlig datafil skrivs inte över med testfordon. Det gäller
 även ett tomt garage med innehållet `[]`. Felaktiga data avvisas
 och ersätts inte med testdata.
-
-Testdata kopieras inte vid bygge i V2.1. Skapandet sker av programmet
-vid körning när datafilen saknas.
 
 Varje fordon sparas en gång med en lista av platsnummer i SpotNumbers.
 En buss har fyra platsnummer i samma post. Det äldre formatet med
