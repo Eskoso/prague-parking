@@ -10,7 +10,7 @@ using PragueParkingV2_1;
 using PragueParking.DataAccess;
 
 // Skapa instanser av klasserna för att hantera parkeringsdata och konfiguration
-var parkingFile = new ParkingFile();
+var ParkingFileV21 = new ParkingFileV21();
 
 // Hämta sökvägen till datafilen
 string dataPath = Path.Combine(
@@ -30,13 +30,46 @@ try
         "config.json");
 
     // Läs in konfigurationen
-    config = new ConfigFile().Load(configPath);
+    config = new ConfigFileV21().Load(configPath);
 
     // Läs in parkeringsdata
-    List<VehicleData> data = parkingFile.Load(dataPath);
+    try
+    {
+        List<VehicleDataV21> data = ParkingFileV21.Load(dataPath);
+        parkingGarage = CreateGarage(data, config);
+    }
+    catch (FileNotFoundException)
+    {
+        parkingGarage = new ParkingGarage(
+            config.NumberOfSpots,
+            config.SpotCapacity,
+            config.SpotCapacities);
 
-    // Skapa parkeringsgaraget med den inlästa konfigurationen och parkeringsdata
-    parkingGarage = CreateGarage(data, config);
+        int number = 1;
+        DateTimeOffset arrivalTime = DateTimeOffset.Now.AddHours(-2);
+
+        foreach (VehicleConfig settings in config.VehicleTypes)
+        {
+            IVehicle vehicle = CreateVehicle(
+                settings.Type,
+                $"TEST{number}",
+                arrivalTime,
+                config);
+
+            if (parkingGarage.TryPark(vehicle))
+            {
+                number++;
+            }
+        }
+
+        if (number == 1)
+        {
+            throw new InvalidDataException(
+                "Inget testfordon ryms med den aktuella konfigurationen.");
+        }
+
+        ParkingFileV21.Save(dataPath, CreateParkingData(parkingGarage));
+    }
 }
 catch (Exception ex)
 {
@@ -53,7 +86,7 @@ catch (Exception ex)
 // Parkera fordon
 static void ParkVehicle(
     ParkingGarage garage,
-    ParkingFile parkingFile,
+    ParkingFileV21 ParkingFileV21,
     string dataPath,
     GarageConfig config)
 {
@@ -62,9 +95,10 @@ static void ParkVehicle(
 
     // Användaren får välja en fordonstyp
     string vehicleType = AnsiConsole.Prompt(
-        new SelectionPrompt<string>()
-            .Title("Välj typ av fordon:")
-            .AddChoices("MC", "CAR", "Tillbaka"));
+    new SelectionPrompt<string>()
+        .Title("Välj typ av fordon:")
+        .AddChoices(config.VehicleTypes.Select(item => item.Type))
+        .AddChoices("Tillbaka"));
 
     // eventuellt "tillbaka" avslutar metoden
     if (vehicleType == "Tillbaka")
@@ -76,11 +110,17 @@ static void ParkVehicle(
         "[grey]Skriv '0' för att återgå till huvudmenyn.[/]");
 
     string licensePlate;
+    string prompt = "Ange registreringsnummer:";
+
+    if (vehicleType == "BICYCLE")
+    {
+        prompt = "Ange cykel-ID, exempelvis CYKEL001:";
+    }
 
     while (true)
     {
         licensePlate = AnsiConsole.Prompt(
-            new TextPrompt<string>("Ange registreringsnummer:")
+            new TextPrompt<string>(prompt)
                 .AllowEmpty())
             .ToUpperInvariant();
 
@@ -103,7 +143,7 @@ static void ParkVehicle(
         if (garage.FindVehicle(licensePlate) != null)
         {
             AnsiConsole.MarkupLine(
-                "[red]Registreringsnumret är redan parkerat.[/]");
+                "[red]Registreringsnumret eller cykel-ID:t används redan.[/]");
             continue;
         }
 
@@ -120,15 +160,16 @@ static void ParkVehicle(
     // Försök att parkera fordonet och spara ändringen
     if (TrySaveChange(
     garage,
-    parkingFile,
+    ParkingFileV21,
     dataPath,
     () => garage.TryPark(vehicle)))
     {
-        ParkingSpot spot = garage.Spots.First(
-            spot => spot.Vehicles.Contains(vehicle));
+        string spotNumbers = string.Join(", ", garage.Spots
+            .Where(spot => spot.Vehicles.Contains(vehicle))
+            .Select(spot => spot.Number));
 
         AnsiConsole.MarkupLine(
-            $"[green]{licensePlate} har parkerats på plats {spot.Number}.[/]");
+            $"[green]{licensePlate} har parkerats. Platsnummer: {spotNumbers}.[/]");
     }
     else
     {
@@ -142,7 +183,7 @@ static void ParkVehicle(
 }
 
 // Flytta fordon
-static void MoveVehicle(ParkingGarage garage, ParkingFile parkingFile, string dataPath)
+static void MoveVehicle(ParkingGarage garage, ParkingFileV21 ParkingFileV21, string dataPath)
 {
     AnsiConsole.Clear();
     AnsiConsole.MarkupLine("[bold yellow]Flytta fordon[/]");
@@ -155,12 +196,31 @@ static void MoveVehicle(ParkingGarage garage, ParkingFile parkingFile, string da
     }
 
     // Hitta alla parkeringsplatser som kan ta emot fordonet och som inte redan innehåller det
-    List<int> destinations = garage.Spots
-        .Where(spot =>
-            !spot.Vehicles.Contains(vehicle) &&
-            spot.CanFit(vehicle))
-        .Select(spot => spot.Number)
-        .ToList();
+    List<int> destinations = new();
+
+    if (vehicle is Bus)
+    {
+        foreach (IParkingSpot spot in garage.Spots)
+        {
+            List<IParkingSpot> busSpots = garage.FindBusSpots(
+                vehicle, spot.Number);
+
+            if (busSpots.Count == 4 &&
+                !busSpots.All(busSpot => busSpot.Vehicles.Contains(vehicle)))
+            {
+                destinations.Add(spot.Number);
+            }
+        }
+    }
+    else
+    {
+        destinations = garage.Spots
+            .Where(spot =>
+                !spot.Vehicles.Contains(vehicle) &&
+                spot.CanFit(vehicle))
+            .Select(spot => spot.Number)
+            .ToList();
+    }
 
     if (destinations.Count == 0)
     {
@@ -189,12 +249,16 @@ static void MoveVehicle(ParkingGarage garage, ParkingFile parkingFile, string da
     // Försök att flytta fordonet och spara ändringen
     if (TrySaveChange(
      garage,
-     parkingFile,
+     ParkingFileV21,
      dataPath,
      () => garage.MoveVehicle(vehicle.LicensePlate, destination)))
     {
+        string spotNumbers = string.Join(", ", garage.Spots
+            .Where(spot => spot.Vehicles.Contains(vehicle))
+            .Select(spot => spot.Number));
+
         AnsiConsole.MarkupLine(
-            $"[green]{vehicle.LicensePlate} har flyttats till plats {destination}.[/]");
+            $"[green]{vehicle.LicensePlate} har flyttats. Platsnummer: {spotNumbers}.[/]");
     }
     else
     {
@@ -207,7 +271,7 @@ static void MoveVehicle(ParkingGarage garage, ParkingFile parkingFile, string da
 }
 
 // hämta ut fordon
-static void RemoveVehicle(ParkingGarage garage, ParkingFile parkingFile, string dataPath, GarageConfig config)
+static void RemoveVehicle(ParkingGarage garage, ParkingFileV21 ParkingFileV21, string dataPath, GarageConfig config)
 {
     AnsiConsole.Clear();
     AnsiConsole.MarkupLine("[bold yellow]Hämta ut fordon[/]");
@@ -220,11 +284,19 @@ static void RemoveVehicle(ParkingGarage garage, ParkingFile parkingFile, string 
     }
 
     // Hitta parkeringsplatsen där fordonet är parkerat
-    ParkingSpot spot = garage.Spots.First(
-        spot => spot.Vehicles.Contains(vehicle));
+    string spotNumbers = string.Join(", ", garage.Spots
+            .Where(spot => spot.Vehicles.Contains(vehicle))
+            .Select(spot => spot.Number));
 
     // Beräkna parkeringstiden och avgiften baserat på fordonets ankomsttid och timpris
-    string vehicleType = vehicle is Car ? "CAR" : "MC";
+    string vehicleType = vehicle switch
+    {
+        Car => "CAR",
+        MC => "MC",
+        Bicycle => "BICYCLE",
+        Bus => "BUS",
+        _ => throw new InvalidDataException("Okänd fordonstyp.")
+    };
 
     VehicleConfig settings = config.VehicleTypes.First(
         item => item.Type == vehicleType);
@@ -236,13 +308,13 @@ static void RemoveVehicle(ParkingGarage garage, ParkingFile parkingFile, string 
     // Försök att ta bort fordonet och spara ändringen
     if (TrySaveChange(
     garage,
-    parkingFile,
+    ParkingFileV21,
     dataPath,
     () => garage.RemoveVehicle(vehicle.LicensePlate)))
     // Beräkna parkeringstiden och visa ett meddelande om att fordonet har hämtats ut
     {
         AnsiConsole.MarkupLine(
-            $"[green]{vehicle.LicensePlate} har hämtats från plats {spot.Number}.[/]");
+            $"[green]{vehicle.LicensePlate} har hämtats ut. Platsnummer: {spotNumbers}.[/]");
 
         Console.WriteLine(
             $"Parkeringstid: {(int)parkedTime.TotalHours} timmar " +
@@ -305,13 +377,21 @@ static void SearchVehicles(ParkingGarage garage)
         // Visa alla matchande fordon med deras parkeringsplats och typ
         foreach (IVehicle vehicle in matches)
         {
-            ParkingSpot spot = garage.Spots.First(
-                spot => spot.Vehicles.Contains(vehicle));
+            string spotNumbers = string.Join(", ", garage.Spots
+                .Where(spot => spot.Vehicles.Contains(vehicle))
+                .Select(spot => spot.Number));
 
-            string vehicleType = vehicle is Car ? "Bil" : "MC";
+            string vehicleType = vehicle switch
+            {
+                Car => "Bil",
+                MC => "MC",
+                Bicycle => "Cykel",
+                Bus => "Buss",
+                _ => throw new InvalidDataException("Okänd fordonstyp.")
+            };
 
             AnsiConsole.MarkupLine(
-                $"[cyan]Plats {spot.Number} - {vehicleType} - {vehicle.LicensePlate}[/]");
+                $"[cyan]Platsnummer: {spotNumbers} - {vehicleType} - {vehicle.LicensePlate}[/]");
         }
 
         AnsiConsole.MarkupLine(
@@ -328,7 +408,7 @@ static void DisplayParking(ParkingGarage garage)
     AnsiConsole.MarkupLine("[bold yellow]Parkeringsstatus[/]");
 
     // Loop för att visa status för varje parkeringsplats
-    foreach (ParkingSpot spot in garage.Spots)
+    foreach (IParkingSpot spot in garage.Spots)
     {
         // Om parkeringsplats är tom, visa att den är ledig
         if (spot.Vehicles.Count == 0)
@@ -342,7 +422,14 @@ static void DisplayParking(ParkingGarage garage)
         List<string> descriptions = spot.Vehicles
             .Select(vehicle =>
             {
-                string type = vehicle is Car ? "Bil" : "MC";
+                string type = vehicle switch
+                {
+                    Car => "Bil",
+                    MC => "MC",
+                    Bicycle => "Cykel",
+                    Bus => "Bus",
+                    _ => throw new InvalidDataException("Okänd fordonstyp.")
+                };
                 return $"{type} - {vehicle.LicensePlate}";
             })
             .ToList();
@@ -370,6 +457,7 @@ static IVehicle? SelectVehicle(ParkingGarage garage)
     // Skapa en lista med registreringsnummer för alla parkerade fordon
     List<string> choices = garage.Spots
         .SelectMany(spot => spot.Vehicles)
+        .Distinct()
         .Select(vehicle => vehicle.LicensePlate)
         .ToList();
 
@@ -402,34 +490,39 @@ static IVehicle? SelectVehicle(ParkingGarage garage)
 }
 
 // Skapa en lista med parkeringsdata från parkeringsgaraget
-static List<VehicleData> CreateParkingData(ParkingGarage garage)
+static List<VehicleDataV21> CreateParkingData(ParkingGarage garage)
 {
-    // Skapa en lista för att lagra parkeringsdata
-    var data = new List<VehicleData>();
+    var data = new List<VehicleDataV21>();
 
-    // Loop genom alla parkeringsplatser och fordon för att skapa parkeringsdata
-    foreach (ParkingSpot spot in garage.Spots)
+    List<IVehicle> vehicles = garage.Spots
+        .SelectMany(spot => spot.Vehicles)
+        .Distinct()
+        .ToList();
+
+    foreach (IVehicle vehicle in vehicles)
     {
-        // Loop genom alla fordon på parkeringsplatsen och skapa en VehicleData-instans för varje fordon
-        foreach (IVehicle vehicle in spot.Vehicles)
+        string vehicleType = vehicle switch
         {
-            // Bestäm fordonstypen baserat på fordonets klass och skapa en VehicleData-instans
-            string vehicleType = vehicle switch
-            {
-                Car => "CAR",
-                MC => "MC",
-                _ => throw new Exception("Fordonstypen kan inte sparas.")
-            };
+            Car => "CAR",
+            MC => "MC",
+            Bicycle => "BICYCLE",
+            Bus => "BUS",
+            _ => throw new Exception("Fordonstypen kan inte sparas.")
+        };
 
-            // Lägg till VehicleData-instansen i listan med parkeringsdata
-            data.Add(new VehicleData
-            {
-                VehicleType = vehicleType,
-                LicensePlate = vehicle.LicensePlate,
-                ArrivalTime = vehicle.ArrivalTime,
-                SpotNumber = spot.Number
-            });
-        }
+        List<int> spotNumbers = garage.Spots
+            .Where(spot => spot.Vehicles.Contains(vehicle))
+            .Select(spot => spot.Number)
+            .OrderBy(number => number)
+            .ToList();
+
+        data.Add(new VehicleDataV21
+        {
+            VehicleType = vehicleType,
+            LicensePlate = vehicle.LicensePlate,
+            ArrivalTime = vehicle.ArrivalTime,
+            SpotNumbers = spotNumbers
+        });
     }
 
     return data;
@@ -437,7 +530,7 @@ static List<VehicleData> CreateParkingData(ParkingGarage garage)
 
 // Skapa parkeringsgaraget beroende på konfigurationen och parkeringsdata
 static ParkingGarage CreateGarage(
-    List<VehicleData> data,
+    List<VehicleDataV21> data,
     GarageConfig config)
 {
     ArgumentNullException.ThrowIfNull(data);
@@ -451,7 +544,7 @@ static ParkingGarage CreateGarage(
     var now = DateTimeOffset.Now;
 
     // Loop genom alla fordon i parkeringsdata för att lägga till dem i parkeringsgaraget
-    foreach (VehicleData item in data)
+    foreach (VehicleDataV21 item in data)
     {
         // Validera registreringsnummer, ankomsttid och parkeringsplats
         if (item == null ||
@@ -484,18 +577,51 @@ static ParkingGarage CreateGarage(
             item.ArrivalTime,
             config);
 
-        // Hitta parkeringsplatsen baserat på parkeringsplatsnumret i parker
-        ParkingSpot? spot = garage.Spots.FirstOrDefault(
-            spot => spot.Number == item.SpotNumber);
+        // Kontrollera att parkeringsplatsen är giltig och att fordonet kan stå där
+        int expectedSpotCount = vehicle is Bus ? 4 : 1;
 
-        // Kontrollera om parkeringsplatsen är giltig och kan ta emot fordonet
-        if (spot == null || !spot.CanFit(vehicle))
+        if (item.SpotNumbers == null ||
+            item.SpotNumbers.Count != expectedSpotCount ||
+            item.SpotNumbers.Distinct().Count() != item.SpotNumbers.Count)
         {
             throw new InvalidDataException(
-                "Datafilen anger en ogiltig eller överfull parkeringsplats.");
+                "Datafilen anger fel antal platser eller upprepade platsnummer.");
         }
 
-        spot.Vehicles.Add(vehicle);
+        if (vehicle is Bus)
+        {
+            List<int> numbers = item.SpotNumbers
+                .OrderBy(number => number)
+                .ToList();
+
+            List<IParkingSpot> busSpots = garage.FindBusSpots(
+                vehicle, numbers[0]);
+
+            if (busSpots.Count != 4 ||
+                !busSpots.Select(spot => spot.Number).SequenceEqual(numbers))
+            {
+                throw new InvalidDataException(
+                    "Datafilen anger ogiltiga eller upptagna bussplatser.");
+            }
+
+            foreach (IParkingSpot busSpot in busSpots)
+            {
+                busSpot.Vehicles.Add(vehicle);
+            }
+        }
+        else
+        {
+            IParkingSpot? spot = garage.Spots.FirstOrDefault(
+                spot => spot.Number == item.SpotNumbers[0]);
+
+            if (spot == null || !spot.CanFit(vehicle))
+            {
+                throw new InvalidDataException(
+                    "Datafilen anger en ogiltig eller överfull parkeringsplats.");
+            }
+
+            spot.Vehicles.Add(vehicle);
+        }
     }
 
     return garage;
@@ -505,7 +631,7 @@ static ParkingGarage CreateGarage(
 // Försök att spara ändringen i parkeringsdatafilen och återställ om det misslyckas
 static bool TrySaveChange(
     ParkingGarage garage,
-    ParkingFile parkingFile,
+    ParkingFileV21 ParkingFileV21,
     string dataPath,
     Func<bool> change)
 {
@@ -523,7 +649,7 @@ static bool TrySaveChange(
     // Försök att spara ändringen i parkeringsdatafilen
     try
     {
-        parkingFile.Save(dataPath, CreateParkingData(garage));
+        ParkingFileV21.Save(dataPath, CreateParkingData(garage));
         return true;
     }
     catch (Exception ex)
@@ -563,6 +689,8 @@ static IVehicle CreateVehicle(
     {
         "CAR" => new Car(licensePlate, arrivalTime, settings.Size),
         "MC" => new MC(licensePlate, arrivalTime, settings.Size),
+        "BICYCLE" => new Bicycle(licensePlate, arrivalTime, settings.Size),
+        "BUS" => new Bus(licensePlate, arrivalTime, settings.Size),
         _ => throw new InvalidDataException("Okänd fordonstyp.")
     };
 }
@@ -590,47 +718,56 @@ static decimal CalculateFee(TimeSpan parkedTime, decimal hourlyRate)
     return startedHours * hourlyRate;
 }
 
-// Läs om priser från konfigurationsfilen och uppdatera timpriserna i konfigurationen
-static void ReloadPrices(GarageConfig config)
+// Läs om konfigurationen och kontrollera den mot parkerade fordon.
+static void ReloadConfig(
+    ref ParkingGarage garage,
+    ref GarageConfig config)
 {
-    // Rensa konsolen och visa meddelande om att priserna läses om
     AnsiConsole.Clear();
-    Console.WriteLine("Läs om priser");
+    Console.WriteLine("Läs om konfiguration");
 
-    // Försök att läsa om priser från konfigurationsfilen och uppdatera timpriserna i konfigurationen
     try
     {
         string configPath = Path.Combine(
             AppContext.BaseDirectory,
             "config.json");
 
-        GarageConfig updatedConfig = new ConfigFile().Load(configPath);
+        GarageConfig updatedConfig =
+            new ConfigFileV21().Load(configPath);
 
-        // Uppdatera timpriserna i konfigurationen baserat på den uppdaterade konfigurationen
-        foreach (VehicleConfig vehicle in config.VehicleTypes)
-        {
-            VehicleConfig updatedVehicle =
-                updatedConfig.VehicleTypes.First(
-                    item => item.Type == vehicle.Type);
+        List<VehicleDataV21> data = CreateParkingData(garage);
 
-            vehicle.HourlyRate = updatedVehicle.HourlyRate;
-        }
+        ParkingGarage updatedGarage = CreateGarage(
+            data, updatedConfig);
 
-        Console.WriteLine("Priserna har uppdaterats.");
+        garage = updatedGarage;
+        config = updatedConfig;
+
+        Console.WriteLine("Konfigurationen har uppdaterats.");
     }
     catch (Exception ex)
     {
-        Console.WriteLine("Priserna kunde inte uppdateras.");
+        Console.WriteLine(
+            "Ändringen avvisades. Tidigare inställningar används.");
         Console.WriteLine(ex.Message);
     }
 
-    Console.WriteLine("Aktuella timpriser:");
+    Console.WriteLine();
+    Console.WriteLine("Aktiva inställningar:");
+    Console.WriteLine($"Antal platser: {config.NumberOfSpots}");
+    Console.WriteLine($"Standardkapacitet: {config.SpotCapacity}");
 
-    // Visa aktuella timpriser för varje fordonstyp
+    foreach (var item in config.SpotCapacities)
+    {
+        Console.WriteLine(
+            $"Plats {item.Key}: kapacitet {item.Value}");
+    }
+
     foreach (VehicleConfig vehicle in config.VehicleTypes)
     {
         Console.WriteLine(
-            $"{vehicle.Type}: {vehicle.HourlyRate:0.00} CZK");
+            $"{vehicle.Type}: storlek {vehicle.Size}, " +
+            $"{vehicle.HourlyRate:0.00} CZK/timme");
     }
 
     Console.WriteLine("Tryck på valfri tangent...");
@@ -649,7 +786,7 @@ static void ShowParkingMap(ParkingGarage garage)
     int freeSpots = 0;
 
     // Loop genom alla parkeringsplatser och visa deras status med färgkodning
-    foreach (ParkingSpot spot in garage.Spots)
+    foreach (IParkingSpot spot in garage.Spots)
     {
         string color;
         string status;
@@ -722,7 +859,7 @@ while (true)
                 "3. Hämta ut fordon",
                 "4. Sök efter fordon",
                 "5. Visa parkering",
-                "6. Läs om priser",
+                "6. Läs om konfiguration",
                 "7. Visa parkeringskarta",
                 "0. Avsluta"
             )
@@ -732,15 +869,15 @@ while (true)
     switch (choice)
     {
         case "1. Parkera fordon":
-            ParkVehicle(parkingGarage, parkingFile, dataPath, config);
+            ParkVehicle(parkingGarage, ParkingFileV21, dataPath, config);
             break;
 
         case "2. Flytta fordon":
-            MoveVehicle(parkingGarage, parkingFile, dataPath);
+            MoveVehicle(parkingGarage, ParkingFileV21, dataPath);
             break;
 
         case "3. Hämta ut fordon":
-            RemoveVehicle(parkingGarage, parkingFile, dataPath, config);
+            RemoveVehicle(parkingGarage, ParkingFileV21, dataPath, config);
             break;
 
         case "4. Sök efter fordon":
@@ -751,8 +888,8 @@ while (true)
             DisplayParking(parkingGarage);
             break;
 
-        case "6. Läs om priser":
-            ReloadPrices(config);
+        case "6. Läs om konfiguration":
+            ReloadConfig(ref parkingGarage, ref config);
             break;
 
         case "7. Visa parkeringskarta":

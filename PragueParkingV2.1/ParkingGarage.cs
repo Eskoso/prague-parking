@@ -4,7 +4,7 @@
     public class ParkingGarage
     {
         // Lista av parkeringsplatser i garaget
-        public List<ParkingSpot> Spots { get; } = new();
+        public List<IParkingSpot> Spots { get; } = new();
 
         // Platsnummer i spotCapacities ersätter standardkapaciteten för just den platsen.
         public ParkingGarage(int numberOfSpots, int spotCapacity, Dictionary<int, int> spotCapacities)
@@ -44,15 +44,66 @@
         }
 
         // Hittar en tillgänglig parkeringsplats för ett fordon
-        public ParkingSpot? FindAvailableSpot(IVehicle vehicle)
+        public IParkingSpot? FindAvailableSpot(IVehicle vehicle)
         {
             ArgumentNullException.ThrowIfNull(vehicle);
 
-            ParkingSpot? sharedSpot = Spots.FirstOrDefault(
+            IParkingSpot? sharedSpot = Spots.FirstOrDefault(
                 spot => spot.Vehicles.Count > 0 && spot.CanFit(vehicle));
 
             return sharedSpot ?? Spots.FirstOrDefault(
                 spot => spot.CanFit(vehicle));
+        }
+
+        // Hitta parkeringsplatser för en buss som börjar från ett specifikt platsnummer
+        public List<IParkingSpot> FindBusSpots(IVehicle vehicle, int startNumber)
+        {
+            ArgumentNullException.ThrowIfNull(vehicle);
+
+            // Kontrollera om fordonet är en buss och om startnumret är giltigt
+            var busSpots = new List<IParkingSpot>();
+            int lastBusSpot = Math.Min(50, Spots.Count);
+
+            // om fordonet inte är en buss eller startnumret är utanför giltigt intervall, returnera en tom lista
+            if (vehicle is not Bus ||
+                startNumber < 1 ||
+                startNumber > lastBusSpot - 3)
+            {
+                return busSpots;
+            }
+
+            long totalCapacity = 0;
+
+            // går igenom fyra parkeringsplatser och kontrollera om de kan rymma bussen
+            for (int number = startNumber; number < startNumber + 4; number++)
+            {
+                IParkingSpot? spot = Spots.FirstOrDefault(
+                    spot => spot.Number == number);
+
+                if (spot == null)
+                {
+                    return new List<IParkingSpot>();
+                }
+
+                // Kontrollera om parkeringsplatsen redan har fordon som inte är bussen
+                foreach (IVehicle parkedVehicle in spot.Vehicles)
+                {
+                    if (parkedVehicle != vehicle)
+                    {
+                        return new List<IParkingSpot>();
+                    }
+                }
+
+                busSpots.Add(spot);
+                totalCapacity += spot.Capacity;
+            }
+
+            if (totalCapacity < vehicle.Size)
+            {
+                return new List<IParkingSpot>();
+            }
+
+            return busSpots;
         }
 
         // Försök parkera ett fordon i garaget
@@ -84,8 +135,29 @@
                 return false;
             }
 
+            // specialfall för bussar och försöker hitta fyra sammanhängande platser
+            if (vehicle is Bus)
+            {
+                for (int start = 1; start <= Math.Min(50, Spots.Count) - 3; start++)
+                {
+                    List<IParkingSpot> busSpots = FindBusSpots(vehicle, start);
+
+                    if (busSpots.Count == 4)
+                    {
+                        foreach (IParkingSpot spot in busSpots)
+                        {
+                            spot.Vehicles.Add(vehicle);
+                        }
+
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+
             // Hitta en tillgänglig parkeringsplats för fordonet
-            ParkingSpot? availableSpot = FindAvailableSpot(vehicle);
+            IParkingSpot? availableSpot = FindAvailableSpot(vehicle);
 
             // Om ingen tillgänglig plats hittas, skicka tillbaka false
             if (availableSpot == null)
@@ -124,12 +196,13 @@
                 return false;
             }
 
-            // Hitta parkeringsplatsen där fordonet är parkerat
-            ParkingSpot spot = Spots.First(
-                spot => spot.Vehicles.Contains(vehicle));
+            // Ta bort fordonet från alla parkeringsplatser där det är parkerat
+            foreach (IParkingSpot spot in Spots)
+            {
+                spot.Vehicles.Remove(vehicle);
+            }
 
-            // Ta bort fordonet
-            return spot.Vehicles.Remove(vehicle);
+            return true;
         }
 
         // Flytta ett fordon från en parkeringsplats till en annan
@@ -139,7 +212,7 @@
             IVehicle? vehicle = FindVehicle(licensePlate);
 
             // Hitta destinationen baserat på destinationens nummer
-            ParkingSpot? destination = Spots.FirstOrDefault(
+            IParkingSpot? destination = Spots.FirstOrDefault(
                 spot => spot.Number == destinationNumber);
 
             // Fordonet eller destinationen saknas, skicka tillbaka false
@@ -148,8 +221,33 @@
                 return false;
             }
 
+            if (vehicle is Bus)
+            {
+                List<IParkingSpot> busSpots = FindBusSpots(
+                    vehicle, destinationNumber);
+
+                if (busSpots.Count != 4)
+                {
+                    return false;
+                }
+
+                if (busSpots.All(spot => spot.Vehicles.Contains(vehicle)))
+                {
+                    return false;
+                }
+
+                RemoveVehicle(licensePlate);
+
+                foreach (IParkingSpot spot in busSpots)
+                {
+                    spot.Vehicles.Add(vehicle);
+                }
+
+                return true;
+            }
+
             // Hitta parkeringsplatsen där fordonet är parkerat
-            ParkingSpot source = Spots.First(
+            IParkingSpot source = Spots.First(
                 spot => spot.Vehicles.Contains(vehicle));
 
             // Fordonet är redan på plats eller ifalla den inte får plats, skicka tillbaka false
@@ -172,6 +270,7 @@
 
             return Spots
                 .SelectMany(spot => spot.Vehicles)
+                .Distinct()
                 .Where(vehicle => vehicle.LicensePlate.Contains(
                     searchTerm,
                     StringComparison.OrdinalIgnoreCase))

@@ -1,9 +1,10 @@
-# Prague Parking V2.0
+# Prague Parking V2.1
 
 Ett parkeringssystem i **C# och .NET 10**, utvecklat av **Walter Esko**
 inom utbildningen Systemutvecklare DevSecOps på KYH.
 
-Projektet innehåller V1.0, V1.1 och den objektorienterade versionen V2.0.
+Projektet innehåller V1.0, V1.1, V2.0 och den vidareutvecklade versionen V2.1.
+V2.0 finns kvar som ett separat körbart projekt.
 
 ## Starta programmet
 
@@ -13,49 +14,67 @@ med stöd för .NET 10.
 1. Klona eller ladda ner hela repot.
 2. Öppna `prague-parking.slnx` i Visual Studio.
 3. Vänta tills NuGet-paketen har återställts.
-4. Högerklicka på `PragueParkingV2` och välj Set as Startup Project.
+4. Högerklicka på `PragueParkingV2.1` och välj Set as Startup Project.
 5. Starta med F5 eller Ctrl+F5.
 
 Menyerna styrs med piltangenterna och Enter.
 
-## Funktioner i V2.0
+## Funktioner i V2.1
 
-- Parkera bilar och motorcyklar.
-- Flytta fordon till en plats där de ryms.
+- Parkera bilar, motorcyklar, cyklar och bussar.
+- Låta mindre fordon dela plats när kapaciteten räcker.
+- Flytta fordon till platser där de ryms.
 - Hämta ut fordon och visa parkeringstid och avgift.
-- Söka med hela eller delar av registreringsnumret.
+- Söka med hela eller delar av registreringsnumret eller cykel-ID:t.
 - Visa en detaljerad parkeringslista.
 - Visa en parkeringskarta med färger och statusbokstäver.
-- Läsa om timpriser utan att starta om programmet.
+- Läsa om hela konfigurationen utan att starta om programmet.
 - Spara parkerade fordon i JSON och återställa dem vid start.
+- Skapa en saknad datafil och fylla den med testfordon vid programstart.
 
 Data sparas efter varje lyckad parkering, flytt och uthämtning.
 Om sparningen misslyckas återställs ändringen i minnet.
+
+Cyklar identifieras med ett unikt cykel-ID, exempelvis CYKEL001,
+som personalen anger vid parkering. Registreringsnummer och cykel-ID
+får innehålla 1–10 bokstäver eller siffror. Dubbletter avvisas
+utan hänsyn till stora eller små bokstäver.
 
 ## Projektstruktur
 
 - `PragueParkingV1.0`: första versionen.
 - `PragueParkingV1.1`: vidareutveckling av första versionen.
-- `PragueParkingV2`: konsolgränssnitt, fordonsklasser och parkeringsregler.
+- `PragueParkingV2`: den objektorienterade versionen V2.0.
+- `PragueParkingV2.1`: konsolgränssnitt, fordonsklasser och parkeringsregler för V2.1.
 - `PragueParking.DataAccess`: läsning, sparning och validering av filer.
 
-V2.0 använder klasserna Vehicle, Car, MC, ParkingSpot och ParkingGarage.
-Car och MC ärver från Vehicle.
+V2.1 använder klasserna Vehicle, Car, MC, Bicycle, Bus,
+ParkingSpot och ParkingGarage. Car, MC, Bicycle och Bus ärver från Vehicle.
+
+Fordon och parkeringsplatser hanteras främst genom interfacen
+IVehicle och IParkingSpot.
+
+V2.1 använder ConfigFileV21, ParkingFileV21 och VehicleDataV21
+i klassbiblioteket. V2.0 använder sina ursprungliga filklasser.
 
 ## Konfiguration
 
-Inställningar och timpriser finns i `PragueParkingV2/config.json`.
+Inställningar och timpriser finns i `PragueParkingV2.1/config.json`.
 
 Standardinställningarna är:
 
 - 100 parkeringsplatser.
 - Standardkapacitet 4 per plats.
-- Bil har storlek 4.
-- MC har storlek 2.
-- Bil kostar 20 CZK per påbörjad timme.
-- MC kostar 10 CZK per påbörjad timme.
 
-En vanlig plats rymmer alltså en bil eller två MC.
+| Fordon | Typ i konfigurationen | Storlek | CZK per påbörjad timme |
+|---|---|---:|---:|
+| Bil | CAR | 4 | 20 |
+| MC | MC | 2 | 10 |
+| Cykel | BICYCLE | 1 | 5 |
+| Buss | BUS | 16 | 80 |
+
+En vanlig plats rymmer alltså en bil, två MC eller fyra cyklar.
+Mindre fordon kan också dela plats i olika kombinationer när de ryms.
 
 Enskilda platser kan ha en annan kapacitet genom SpotCapacities:
 
@@ -66,43 +85,72 @@ Enskilda platser kan ha en annan kapacitet genom SpotCapacities:
 ```
 
 Det betyder att plats 100 har kapacitet 8. Övriga platser använder
-standardkapaciteten. Plats 100 rymmer då två bilar eller fyra MC.
+standardkapaciteten. Plats 100 rymmer exempelvis två bilar eller fyra MC.
+
+En buss reserverar fyra hela platser i nummerföljd. Samtliga måste
+ligga inom plats 1–50, där takhöjden är tillräcklig. Platsernas
+sammanlagda kapacitet måste räcka och inga andra fordon får stå där.
+Vid flytt får målplatserna överlappa bussens egna platser.
+
+Fyra platser i nummerföljd är projektets valda lösning för bussar.
+Kartan är schematisk, så dess radgränser och ritade körgångar
+begränsar inte bussplaceringen.
 
 Konfigurationen kontrolleras vid inläsning. Ogiltiga värden,
 dubbla fordonstyper och parkeringsdata som inte ryms avvisas.
+CAR och MC måste finnas i konfigurationen. BICYCLE och BUS kan läggas till.
 
 ## Filer under körning
 
 Vid bygge kopieras konfigurationsfilen till programmets körmapp.
 Vid vanlig Debug-körning är det:
 
-`PragueParkingV2/bin/Debug/net10.0/`
+`PragueParkingV2.1/bin/Debug/net10.0/`
 
 Programmet läser `config.json` och sparar aktuell parkering
 i `parking.json` i den mappen.
 
-För att ändra priser medan programmet körs:
+För att ändra inställningar medan programmet körs:
 
 1. Redigera `config.json` i körmappen och spara.
-2. Välj menyvalet Läs om priser.
-3. Kontrollera de aktuella priserna som visas.
+2. Välj menyvalet Läs om konfiguration.
+3. Kontrollera de aktiva inställningarna som visas.
 
-Detta menyval uppdaterar bara priserna. Ändringar av antal platser
-och fordonsstorlekar börjar gälla vid nästa programstart.
+Menyvalet läser om antal platser, platskapaciteter, fordonstyper,
+fordonsstorlekar och priser. De nya inställningarna kontrolleras
+mot alla parkerade fordon innan de börjar användas.
+
+Det går exempelvis inte att ta bort en upptagen plats eller minska
+en kapacitet så att parkerade fordon inte längre ryms.
+Om ändringen avvisas behålls tidigare inställningar och garage i minnet.
+
+En avvisad ändring finns fortfarande kvar i den redigerade JSON-filen.
+Filen behöver rättas innan nästa programstart.
 
 Ändra även projektets konfigurationsfil om inställningarna ska
 följa med framtida byggen.
 
 ## Startdata
 
-Projektet innehåller en `parking.json` med fyra testfordon.
+Om `parking.json` saknas vid programstart skapar programmet ett tomt
+garage och försöker parkera ett testfordon per konfigurerad fordonstyp.
+De fordon som ryms sparas i den nya datafilen.
 
-Vid bygge kopieras den till körmappen endast om ingen datafil
-redan finns där. Befintliga parkeringar skrivs inte över vid bygge.
-Det gäller även om garaget har tömts.
+Med standardinställningarna skapas fyra testfordon: en bil, en MC,
+en cykel och en buss. Deras ankomsttid sätts till två timmar före
+skapandet, så att även avgifter kan kontrolleras.
 
-Testfordonen har fasta ankomsttider. Deras avgifter beror därför
-på hur lång tid som gått när programmet testas.
+En befintlig datafil skrivs inte över med testfordon. Det gäller
+även ett tomt garage med innehållet `[]`. Felaktiga data avvisas
+och ersätts inte med testdata.
+
+Testdata kopieras inte vid bygge i V2.1. Skapandet sker av programmet
+vid körning när datafilen saknas.
+
+Varje fordon sparas en gång med en lista av platsnummer i SpotNumbers.
+En buss har fyra platsnummer i samma post. Det äldre formatet med
+ett enda SpotNumber kan också läsas och omvandlas till det nya
+formatet vid nästa lyckade sparning.
 
 ## Avgiftsregler
 
@@ -131,23 +179,40 @@ Kartan visar åtta platser per rad, uppdelade i grupper om
 3, 2 och 3 platser med körgångar mellan grupperna.
 Med 100 platser blir det 12 fulla rader och en sista rad med fyra platser.
 
+Bussens fyra platser visas som fulla. I sökresultat och fordonsval
+visas bussen som ett enda fordon. Bekräftelser vid parkering, flytt
+och uthämtning visar samtliga platsnummer.
+
 ## Testning
 
-Manuella tester har genomförts för parkering, flytt, uthämtning,
-sökning, avgifter, prisomladdning, olika platsstorlekar och omstart.
+Hela solution har byggts utan varningar eller fel.
 
-En ren körkopia har också kontrollerats på utvecklingsdatorn:
+Separata tillfälliga kontrollprojekt har använts för att kontrollera:
 
-- Projektet bygger utan gamla bin- och obj-mappar.
-- Konfiguration och testdata följer med.
-- Ändrade parkeringsdata bevaras vid nytt bygge.
-- Ett tomt garage förblir tomt vid nytt bygge.
-- Programmet startar och visar kartan.
+- Bussparkering inom plats 1–50 och gränsfall vid områdets slut.
+- Flytt av bussar, även med överlappning av egna platser.
+- Uthämtning som frigör samtliga bussplatser.
+- Att andra fordon på delade platser bevaras.
+- Sparning och inläsning av flera platsnummer utan dubbla fordonsposter.
+- Avvisning av ogiltiga och överlappande placeringar.
+- Återställning i minnet vid misslyckad sparning.
+- Godkända och avvisade ändringar vid konfigurationsomladdning.
 
-Körning på en annan dator är ännu inte verifierad.
+Den byggda applikationens uppstart har också kontrollerats i separata
+körmappar för saknad datafil, befintliga fordon, ett tomt garage,
+felaktig JSON och det äldre dataformatet.
 
-## Begränsningar i V2.0
+Kontrollprojekten är tillfälliga och ingår inte som en etablerad
+testsvit i repot. Vid kontroll av omladdningslogiken var skärmrensning
+och tangentväntan bortkopplade i kontrollprojektet.
 
-- Endast bil och MC kan parkeras.
+Ett fullständigt interaktivt sluttest av V2.1 och körning på en annan
+fysisk dator är ännu inte verifierade.
+
+## Begränsningar i V2.1
+
+- Fordonstyperna som stöds är bil, MC, cykel och buss.
+- Bussar reserverar alltid fyra hela platser, även om platskapaciteterna varierar.
+- Cykel-ID anges manuellt av personalen.
 - Avgiften beräknas och visas; programmet genomför ingen betalning.
 - Kartan är schematisk.
