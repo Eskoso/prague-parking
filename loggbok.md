@@ -1,9 +1,9 @@
-# Loggbok – Prague Parking V1.0, V1.1 och V2
+# Loggbok – Prague Parking V1.0, V1.1, V2.0 och V2.1
 
 **Namn:** Walter Esko  
 **Utbildning:** Systemutvecklare DevSecOps, KYH  
 **Kurs:** Objektorienterad programmering  
-**Projekt:** Prague Parking V1 & V1.1
+**Projekt:** Prague Parking V1.0, V1.1, V2.0 och V2.1
 **Programmeringsspråk:** C#  
 **Utvecklingsmiljö:** Visual Studio, .NET 10
 
@@ -135,3 +135,70 @@ ren körkopia kontrollerades också för att verifiera bygge, startdata
 och att befintliga parkeringsdata inte skrivs över.
 
 Jag arbetade därefter med dokumentationen för V2.0 inför inlämningen.
+
+## Prague Parking V2.1
+
+### Arbetstillfälle 1 – Interface, nya fordonstyper och testning
+
+**Datum:** 2026-11-01
+
+Jag kopierade projektet PragueParkingV2 till PragueParkingV2.1 och la in den i samma solution. Jag ändrade namespace till PragueParkingV2_1 samt behöll V2.0 som eget körbart projekt.
+
+Jag la till interfacen IVehicle och IParkingSpot och anpassade
+listor, parametrar och returvärden så att parkeringskoden använder dem korrekt.
+Under arbetet gick jag igenom skillnaden mellan ett interface som
+beskriver ett kontrakt och basklassen Vehicle som samlar gemensam kod.
+
+Jag skapade klasserna Bicycle och Bus med arv från Vehicle.
+Konfigurationen fick cyklar med storlek 1 och timpris 5 CZK samt
+bussar med storlek 16 och timpris 80 CZK. Eftersom cyklar saknar
+registreringsskylt valde jag att personalen anger ett unikt cykel-ID, eg. CYKEL001.
+
+För bussarna valde jag modellen att en buss reserverar fyra hela
+platser i nummerföljd inom plats 1–50, det är mitt lösningsval.
+Jag anpassade parkering, flytt, uthämtning och kartan för den nya modellen.
+Vid flytt får bussens nya platser överlappa de egna, men inga andra
+fordon får blockera platserna. Samma bussobjekt används på alla fyra 
+platser så att ankomsttiden bevaras.
+
+En viktig del var att bussen inte skulle räknas som fyra olika fordon.
+Jag använde .Distinct() i sök och fordonsval. I datafilen sparas varje 
+fordon en gång med en lista av platsnummer i SpotNumbers. Bekräftelserna 
+visar också alla platser.
+
+Jag la till ConfigFileV21, ParkingFileV21 och VehicleDataV21 i klassbiblioteket 
+för att kunna göra V2.1 utan att ändra orgiginala V2.0:s klasser. Läsaren kan 
+även läsa det äldre formatet med SpotNumber.
+
+Jag ersatte byggkopieringen av testdata med att programmet själv
+skapar datafilen när den saknas, testfordonen placeras med vanliga
+parkeringslogiken. En befintlig fil, även ett tomt garage med [],
+ska fortsätta användas och felaktiga data ska inte ersättas med testfordonen.
+
+Meny för prisomladdning ändrades till Läs om konfiguration.
+Programmet läser först de nya inställningarna och försöker bygga ett
+nytt garage med de befintliga fordonens placeringar och ankomsttider.
+När allt har godkänts ersätts det aktiva garaget och konfigurationen. 
+Vid fel behålls de tidigare inställningarna i minnet.
+
+Jag testade programmet manuellt med hjälp av en checklista för bland
+annat parkering, validering, sökning, karta, flytt, uthämtning, avgifter,
+sparning, omstart och omladdning av konfigurationen. Hittills har jag
+arbetat med manuell testning och inte skrivit eller kört automatiska
+tester själv. Körning på en annan fysisk dator är inte separat
+dokumenterad här.
+
+- **Parkering:** Parkera bil, MC, cykel och buss samt kontrollera att fordonen får rätt antal platser.
+- **Delade platser:** Kontrollera att flera mindre fordon kan dela en plats när kapaciteten räcker.
+- **Validering:** Prova tomma, för långa och ogiltiga registreringsnummer samt dubbla registreringsnummer och cykel-ID.
+- **Sökning:** Söka med hela och delar av registreringsnummer eller cykel-ID.
+- **Parkeringskarta:** Kontrollera att lediga, delvis upptagna och fulla platser visas korrekt.
+- **Flytt:** Flytta fordon och kontrollera att övriga fordon står kvar. För bussar testades även överlappning med egna platser och gränsen vid plats 50.
+- **Uthämtning:** Hämta ut fordon och kontrollera att rätt platser frigörs.
+- **Avgifter:** Kontrollera gratisperioden och avgifterna för de olika fordonstyperna.
+- **Sparning och omstart:** Kontrollera att fordon, placeringar och ankomsttider bevaras.
+- **Testdata:** Kontrollera att en saknad datafil skapas och att en befintlig fil, även ett tomt garage, bevaras.
+- **Konfiguration:** Läsa om ändrade inställningar och kontrollera att ogiltiga ändringar avvisas.
+
+Jag uppdaterade V2.1 README, med beskrivningar av de nya funktionerna, filformatet, bussmodellen, konfigurationsomladdningen och testningen. Den personliga reflektionen
+återstår att skriva utifrån mina egna erfarenheter av projektet och kursen.

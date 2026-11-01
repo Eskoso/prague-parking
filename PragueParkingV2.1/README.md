@@ -178,27 +178,19 @@ och uthämtning visar samtliga platsnummer.
 
 Hela solution har byggts utan varningar eller fel.
 
-Separata tillfälliga kontrollprojekt har använts för att kontrollera:
+V2.1 har hittills testats manuellt med hjälp av en checklista för:
 
-- Bussparkering inom plats 1–50 och gränsfall vid områdets slut.
-- Flytt av bussar, även med överlappning av egna platser.
-- Uthämtning som frigör samtliga bussplatser.
-- Att andra fordon på delade platser bevaras.
-- Sparning och inläsning av flera platsnummer utan dubbla fordonsposter.
-- Avvisning av ogiltiga och överlappande placeringar.
-- Återställning i minnet vid misslyckad sparning.
-- Godkända och avvisade ändringar vid konfigurationsomladdning.
+- Parkering av bil, MC, cykel och buss.
+- Validering av registreringsnummer och cykel-ID.
+- Sökning, parkeringslista och karta.
+- Flytt och uthämtning av fordon.
+- Parkeringstid och avgifter.
+- Sparning och omstart.
+- Skapande av testdata när datafilen saknas.
+- Omladdning av konfigurationen.
 
-Den byggda applikationens uppstart har också kontrollerats i separata
-körmappar för saknad datafil, befintliga fordon, ett tomt garage,
-felaktig JSON och det äldre dataformatet.
-
-Kontrollprojekten är tillfälliga och ingår inte som en etablerad
-testsvit i repot. Vid kontroll av omladdningslogiken var skärmrensning
-och tangentväntan bortkopplade i kontrollprojektet.
-
-Ett fullständigt interaktivt sluttest av V2.1 och körning på en annan
-fysisk dator är ännu inte verifierade.
+Det finns ingen automatiserad testsvit i repot.
+Körning på en annan fysisk dator är ännu inte separat verifierad.
 
 ## Begränsningar i V2.1
 
