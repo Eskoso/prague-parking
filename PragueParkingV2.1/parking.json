@@ -1,0 +1,26 @@
+[
+  {
+    "VehicleType": "CAR",
+    "LicensePlate": "TESTBIL1",
+    "ArrivalTime": "2026-10-01T12:00:00+02:00",
+    "SpotNumber": 1
+  },
+  {
+    "VehicleType": "MC",
+    "LicensePlate": "TESTMC1",
+    "ArrivalTime": "2026-10-01T12:05:00+02:00",
+    "SpotNumber": 2
+  },
+  {
+    "VehicleType": "MC",
+    "LicensePlate": "TESTMC2",
+    "ArrivalTime": "2026-10-01T12:10:00+02:00",
+    "SpotNumber": 2
+  },
+  {
+    "VehicleType": "MC",
+    "LicensePlate": "TESTMC3",
+    "ArrivalTime": "2026-10-01T12:15:00+02:00",
+    "SpotNumber": 100
+  }
+]

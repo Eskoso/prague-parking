@@ -1,0 +1,19 @@
+﻿{
+    "NumberOfSpots": 100,
+    "SpotCapacity": 4,
+    "SpotCapacities": {
+        "100": 8
+    },
+    "VehicleTypes": [
+        {
+            "Type": "CAR",
+            "Size": 4,
+            "HourlyRate": 20
+        },
+        {
+            "Type": "MC",
+            "Size": 2,
+            "HourlyRate": 10
+        }
+    ]
+}
