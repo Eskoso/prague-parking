@@ -36,7 +36,8 @@ Data sparas efter varje lyckad parkering, flytt och uthämtning.
 Om sparningen misslyckas återställs ändringen i minnet.
 
 Cyklar identifieras med ett unikt cykel-ID, exempelvis "CYKEL001",
-som personalen anger vid parkering. Registreringsnummer och cykel-ID.
+som personalen anger vid parkering. Registreringsnummer och cykel-ID
+måste vara unika och innehålla 1–10 bokstäver eller siffror.
 
 ## Projektstruktur
 
@@ -91,7 +92,7 @@ måste räcka och inga andra fordon får stå där. Vid flytt får målplatserna
 överlappa bussens egna platser.
 
 Konfigurationen kontrolleras vid start. Ogiltiga värden,
-dubbla fordonstyper och parkeringsdata som inte ryms tas bort.
+dubbla fordonstyper och parkeringsdata som inte ryms avvisas.
 CAR och MC måste finnas i konfigurationen. BICYCLE och BUS kan läggas till.
 
 ## Filer under körning
@@ -190,7 +191,11 @@ V2.1 har hittills testats manuellt med hjälp av en checklista för:
 - Omladdning av konfigurationen.
 
 Det finns ingen automatiserad testsvit i repot.
-Körning på en annan fysisk dator är ännu inte separat verifierad.
+Bygge och körning på en annan dator har verifierats av Walter.
+
+## Reflektion
+
+Den personliga reflektionen för V2.0 och V2.1 lämnas in separat som PDF.
 
 ## Begränsningar i V2.1
 

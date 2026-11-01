@@ -185,8 +185,7 @@ Jag testade programmet manuellt med hjälp av en checklista för bland
 annat parkering, validering, sökning, karta, flytt, uthämtning, avgifter,
 sparning, omstart och omladdning av konfigurationen. Hittills har jag
 arbetat med manuell testning och inte skrivit eller kört automatiska
-tester själv. Körning på en annan fysisk dator är inte separat
-dokumenterad här.
+tester själv.
 
 - **Parkering:** Parkera bil, MC, cykel och buss samt kontrollera att fordonen får rätt antal platser.
 - **Delade platser:** Kontrollera att flera mindre fordon kan dela en plats när kapaciteten räcker.
@@ -201,4 +200,8 @@ dokumenterad här.
 - **Konfiguration:** Läsa om ändrade inställningar och kontrollera att ogiltiga ändringar avvisas.
 
 Jag uppdaterade V2.1 README, med beskrivningar av de nya funktionerna, filformatet, bussmodellen, konfigurationsomladdningen och testningen. Den personliga reflektionen
-återstår att skriva utifrån mina egna erfarenheter av projektet och kursen.
+för V2.0 och V2.1 lämnas in separat som PDF.
+
+### Kontroll inför inlämning
+
+Jag har verifierat att V2.1 går att bygga och köra på en annan dator.

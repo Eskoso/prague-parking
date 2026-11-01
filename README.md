@@ -178,6 +178,15 @@ konfiguration, avgifter och parkeringskarta.
 
 [Läs dokumentationen för V2.0](PragueParkingV2/README.md)
 
+## Prague Parking V2.1
+
+Vidareutvecklingen för VG med interface, cyklar och bussar,
+automatisk testdata och omladdning av hela konfigurationen.
+
+[Läs dokumentationen för V2.1](PragueParkingV2.1/README.md)
+
+Den personliga reflektionen för V2.0 och V2.1 lämnas in separat som PDF.
+
 ---
 
 *Prague Parking är ett utbildningsprojekt utvecklat för att öva på programmeringslogik, arrayer, metoder, felhantering och användarinteraktion i C#.*
